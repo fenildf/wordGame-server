@@ -460,9 +460,9 @@ void game::loadChallenger()
 	ifstream in("challenger.txt");
 	string name, password;
 	int level, pass, exp;
-	while (!in.eof())
+	while (in>>name)
 	{
-		in >> name >> password >> level >> pass >> exp;
+		in >> password >> level >> pass >> exp;
 		ChallengerInfo[name] = new challenger(name, password, level, pass, exp);
 	}
 	in.close();
@@ -473,9 +473,9 @@ void game::loadDesigner()
 	ifstream in("designer.txt");
 	string name, password;
 	int level, word;
-	while (!in.eof())
+	while (in>>name)
 	{
-		in >> name >> password >> level >> word;
+		in >> password >> level >> word;
 		designerInfo[name] = new designer(name, password, level, word);
 	}
 	in.close();
