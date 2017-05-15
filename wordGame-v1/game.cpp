@@ -1,8 +1,10 @@
 #include "game.h"
 #include <conio.h>
 #include <iostream>
-#include<fstream>
+#include <fstream>
 #include <string>
+#include <random>
+#include <ctime>
 using namespace std;
 
 game::game():currentPlayer(nullptr),mode(FAIL)
@@ -11,7 +13,10 @@ game::game():currentPlayer(nullptr),mode(FAIL)
 	
 	loadDesigner();
 
+	loadVocabulary();
 	player::allRankInit();
+	challenger::levelExpInit();
+	designer::levelWordInit();
 }
 
 game::~game()
@@ -19,7 +24,7 @@ game::~game()
 	player::saveAllRank();
 	saveChallenger();
 	saveDesigner();
-	
+	saveVocabulary();
 	auto cbegin = ChallengerInfo.begin(), cend = ChallengerInfo.end();
 	while (cbegin != cend) { delete cbegin->second; cbegin++; }
 	auto dbegin = designerInfo.begin(), dend = designerInfo.end();
@@ -99,7 +104,7 @@ Mode game::Register()
 	string type;
 	map<string, player*> *user = nullptr;
 
-	cout << "选择注册类型(0.闯关\t1.出题):";
+	cout << "选择注册类型(0.闯关\t1.出题\t2.返回):";
 	cin >> type;
 	while (type != "0"&&type != "1"&&type != "2")
 	{
@@ -191,24 +196,85 @@ int game::userIn()
 int game::challengeUi()
 {
 	string choice;
-	cout << "*************************闯 关*************************" << endl;
-	cout << "请选择：0.查看排名\t1.查找用户\t2.注销\t3.退出" << endl;
+	cout << "*************************闯 关 者 界 面*************************" << endl;
+	cout << "请选择：0.开始游戏\t1.查看排名\t2.查找用户\t3.注销\t4.退出" << endl;
 	cin >> choice;
-	while (choice!="2"&&choice!="3")
+	while (choice!="3"&&choice!="4")
 	{
-		if (choice == "0") rank();
-		else if (choice == "1") search();
+		if (choice == "0") challenge();
+		else if (choice == "1") rank();
+		else if (choice == "2") search();
 
-		cout << "请选择：0.查看排名\t1.查找用户\t2.注销\t3.退出" << endl;
+		cout << "请选择：0.开始游戏\t1.查看排名\t2.查找用户\t3.注销\t4.退出" << endl;
 		cin >> choice;
 	}
-	if (choice == "2")
+	if (choice == "3")
 	{
 		mode = FAIL;
 		return LOGOUT;
 	}
-	else if (choice == "3") return QUIT;
+	else if (choice == "4") return QUIT;
 	cout << "******************************************************" << endl;
+}
+
+void game::challenge()
+{
+	system("cls");
+
+	string currentWord;
+	auto begin = vocabulary.begin(), end = vocabulary.end();
+	int pass = 0;
+	int duration = 10000;
+	default_random_engine e(time(0));
+	uniform_int_distribution<unsigned> u(0, 100);
+	
+	string again = "y";
+	while (again=="y")
+	{
+		
+		cout << "************************第 " << pass + 1 << " 关************************" << endl;
+		currentWord = begin->second[u(e) % begin->second.size()];
+		cout << currentWord << endl;
+		_sleep(duration);
+		system("cls");
+
+		cout << "************************第 " << pass + 1 << " 关************************" << endl;
+		cout << "输入答案:" << endl;
+		while (currentPlayer->solve(currentWord))
+		{
+			pass++;
+			begin++;
+			if (begin == end) break;
+
+			currentPlayer->refreshInfo(((pass + 1) % 5 + 1) * 10);
+			currentPlayer->reRank();
+			currentWord = begin->second[u(e) % begin->second.size()];
+			system("cls");
+
+			cout << "************************第 " << pass + 1 << " 关************************" << endl;
+			cout << currentWord << endl;
+			if ((pass - 1) % 5 == 0 && duration >= 1000) duration -= 500;
+			_sleep(duration);
+			system("cls");
+			cout << "************************第 " << pass + 1 << " 关************************" << endl;
+			cout << "输入答案:" << endl;
+		}
+		if (begin == end) cout << "恭喜全部通关！" << endl;
+		currentPlayer->showInfo();
+
+		cout << "再来一次？y/n" << endl;
+		cin >> again;
+		while (again!="y"&&again!="n")
+		{
+			cout << "y/n?" << endl;
+			cin >> again;
+		}
+		pass = 0;
+		duration = 0;
+		begin = vocabulary.begin();
+	}
+
+	cout << "****************************************************" << endl;
 }
 
 void game::rank()
@@ -437,22 +503,61 @@ void game::searchDesigner(string name, int level, int word)
 int game::designUi()
 {
 	string choice;
-	cout << "请选择：0.查看排名\t1.查找用户\t2.注销\t3.退出" << endl;
+	cout << "*************************出 题 者 界 面*************************" << endl;
+	cout << "请选择：0.出题\t1.查看排名\t2.查找用户\t3.注销\t4.退出" << endl;
 	cin >> choice;
-	while (choice != "2" && choice != "3")
+	while (choice != "4" && choice != "3")
 	{
-		if (choice == "0") rank();
-		else if (choice == "1") search();
+		if (choice == "0") design();
+		else if (choice == "1") rank();
+		else if (choice == "2") search();
 
-		cout << "请选择：0.查看排名\t1.查找用户\t2.注销\t3.退出" << endl;
+		cout << "请选择：0.出题\t1.查看排名\t2.查找用户\t3.注销\t4.退出" << endl;
 		cin >> choice;
 	}
-	if (choice == "2")
+	if (choice == "3")
 	{
 		mode = FAIL;
 		return LOGOUT;
 	}
-	else if (choice == "3") return QUIT;
+	else if (choice == "4") return QUIT;
+}
+
+void game::design()
+{
+	system("cls");
+	string word;
+	int flag = 1;
+	cout << "*************************出 题*************************" << endl;
+	cout << "输入要添加的新词（输入!q停止出题）:";
+	cin >> word;
+	while (word != "!q")
+	{
+		auto &list = vocabulary[word.size()];
+		if (list.size() == 0)
+		{
+			list.push_back(word);
+		}
+		else
+		{
+			for (int i = 0; i < list.size()&&flag!=0; i++)
+			{
+				if (list[i] == word) flag = 0;
+			}
+		}
+		if (flag)
+		{
+			cout << "添加成功！" << endl;
+			currentPlayer->refreshInfo(1);
+			currentPlayer->reRank();
+		}
+		else cout << "单词已存在！" << endl;
+
+		cout << "输入要添加的新词（输入!q停止出题）:";
+		cin >> word;
+	}
+	system("cls");
+	currentPlayer->showInfo();
 }
 
 void game::loadChallenger()
@@ -481,6 +586,18 @@ void game::loadDesigner()
 	in.close();
 }
 
+void game::loadVocabulary()
+{
+	ifstream in("vocabulary.txt");
+	string word;
+	int l = 0;
+	while (in>>word)
+	{
+		if (word.size() > l) l = word.size();
+		vocabulary[l].push_back(word);
+	}
+}
+
 void game::saveChallenger()
 {
 	ofstream out("challenger.txt");
@@ -504,6 +621,21 @@ void game::saveDesigner()
 	{
 		out << begin->second->getName() << " " << begin->second->getPw() << " " << begin->second->getLevel()<<" "
 			<< begin->second->getWord() << endl;
+		begin++;
+	}
+	out.close();
+}
+
+void game::saveVocabulary()
+{
+	ofstream out("vocabulary.txt");
+	auto begin = vocabulary.begin(), end = vocabulary.end();
+	while (begin!=end)
+	{
+		for (auto word:begin->second)
+		{
+			out << word << endl;
+		}
 		begin++;
 	}
 	out.close();

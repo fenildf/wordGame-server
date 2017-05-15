@@ -2,6 +2,14 @@
 #include <iostream>
 #include <fstream>
 using namespace std;
+
+vector<string> player::cLevelRanking = vector<string>();
+vector<string> player::dLevelRanking = vector<string>();
+vector<string> player::expRanking = vector<string>();
+vector<string> player::passRanking = vector<string>();
+vector<string> player::wordRanking = vector<string>();
+vector<int> challenger::levelExp = vector<int>();
+vector<int> designer::levelWord = vector<int>();
 player::player(const player & p):name(p.name),password(p.password),level(p.level),clgInfo(p.clgInfo),dsInfo(p.dsInfo)
 {
 
@@ -17,13 +25,7 @@ player & player::operator=(const player & p)
 	
 	return *this;
 }
-vector<string> player::cLevelRanking = vector<string>();
-vector<string> player::dLevelRanking = vector<string>();
-vector<string> player::expRanking = vector<string>();
-vector<string> player::passRanking = vector<string>();
-vector<string> player::wordRanking = vector<string>();
-vector<int> challenger::levelExp = vector<int>();
-vector<int> designer::levelWord = vector<int>();
+
 
 void player::rankInit(vector<string> &ranking,string file)
 {
@@ -70,11 +72,7 @@ bool challenger::solve(string word)
 {
 	string ans;
 	cin >> ans;
-	while (ans != "q"&&ans != word)
-	{
-		cout << "错误！" << endl;
-	}
-	if (ans == word) cout << "正确！" << endl;
+	if (ans != word) cout << "错误！" << endl;
 	return ans==word;
 }
 
@@ -119,11 +117,51 @@ bool challenger::showInfo()
 	return true;
 }
 
+void challenger::reRank()
+{
+	attrReRank(player::cLevelRanking, level,CHALLENGE,LEVEL);
+	attrReRank(player::passRanking, pass, CHALLENGE,PASS);
+	attrReRank(player::expRanking, exp, CHALLENGE,EXP);
+}
+
+void challenger::refreshInfo(int d)
+{
+	exp += d;
+	if (level < MAX_LEVEL&&exp >= levelExp[level + 1]) level++;
+	pass++;
+}
+
 void challenger::addChallenger(string n)
 {
 	player::cLevelRanking.push_back(n);
 	player::passRanking.push_back(n);
 	player::expRanking.push_back(n);
+}
+
+void challenger::levelExpInit()
+{
+	levelExp.push_back(0);
+	for (int i = 1; i < 100; i++)
+	{
+		levelExp.push_back(i*5 + levelExp[i - 1]);
+	}
+}
+
+int player::getAttr(ATTR a)
+{
+	switch (a)
+	{
+	case LEVEL:return getLevel();
+		break;
+	case PASS:return getPass();
+		break;
+	case EXP:return getExp();
+		break;
+	case WORD:return getWord();
+		break;
+	default:return 0;
+		break;
+	}
 }
 
 void player::allRankInit()
@@ -144,10 +182,24 @@ void player::saveAllRank()
 	saveRank(wordRanking, "word.txt");
 }
 
-void challenger::expInc(int dExp)
+void player::attrReRank(vector<string>& ranking, int attr,Mode m,ATTR a)
 {
-	exp += dExp;
-	if (level<=MAX_LEVEL&&exp >= levelExp[level + 1]) level++;
+	int i = 0;
+	map<string, player*> *user = nullptr;
+	if (m == CHALLENGE) user = clgInfo;
+	else user = dsInfo;
+	while (ranking.size() > i&&ranking[i] != name) i++;
+	if (i != ranking.size())
+	{
+		string next;
+		while (i>=1)
+		{
+			next = ranking[i - 1];
+			if (attr < (*user)[next]->getAttr(a)) break;
+			swap(ranking[i - 1], ranking[i]);
+			i--;
+		}
+	}
 }
 
 bool designer::rank(string n, Mode m)
@@ -180,6 +232,12 @@ bool designer::rank(string n, Mode m)
 	return true;
 }
 
+void designer::refreshInfo(int d)
+{
+	word += d;
+	if (level < MAX_LEVEL&&word >= levelWord[level + 1]) level++;
+}
+
 bool designer::showInfo()
 {
 	cout << "姓名\t" << "等级\t" << "出题数" << endl;
@@ -190,6 +248,13 @@ bool designer::showInfo()
 	cout << "**************************************************************" << endl;
 	return true;
 }
+
+void designer::reRank()
+{
+	attrReRank(dLevelRanking, level,DESIGN,LEVEL);
+	attrReRank(wordRanking, word, DESIGN,WORD);
+}
+
 
 void designer::addDesigner(string n)
 {
