@@ -2,6 +2,8 @@
 #include "player.h"
 #include <map>
 #include <vector>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
 
 enum OPTION{LOGIN,REGISTER,LOGOUT,QUIT};
 
@@ -9,7 +11,7 @@ enum OPTION{LOGIN,REGISTER,LOGOUT,QUIT};
 class game
 {
 public:
-	game();
+	game(SOCKET *sSocket = nullptr, SOCKET *cSocket = nullptr);
 	~game();
 	void run();//运行游戏
 private:
@@ -36,6 +38,8 @@ private:
 	void saveVocabulary();
 
 	player *currentPlayer;//当前用户指针
+	SOCKET *serverSocket;
+	SOCKET *clientSocket;
 	int currentPass;//当前关卡
 	Mode mode;//当前登录模式
 	map<string, player*> ChallengerInfo;//存储所有闯关者信息

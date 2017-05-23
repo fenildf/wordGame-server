@@ -7,7 +7,7 @@
 #include <ctime>
 using namespace std;
 
-game::game():currentPlayer(nullptr),mode(FAIL)
+game::game(SOCKET *sSocket = nullptr, SOCKET *cSocket = nullptr):currentPlayer(nullptr),mode(FAIL),serverSocket(sSocket),clientSocket(cSocket)
 {
 	loadChallenger();
 	
