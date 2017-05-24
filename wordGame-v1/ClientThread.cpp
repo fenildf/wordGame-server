@@ -5,6 +5,6 @@
 
 void clientLink(SOCKET *ServerSocket, SOCKET *clientSocket)
 {
-	game g;
+	game g(ServerSocket,clientSocket);
 	g.run();
 }

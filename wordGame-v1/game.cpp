@@ -7,7 +7,7 @@
 #include <ctime>
 using namespace std;
 
-game::game(SOCKET *sSocket = nullptr, SOCKET *cSocket = nullptr):currentPlayer(nullptr),mode(FAIL),serverSocket(sSocket),clientSocket(cSocket)
+game::game(SOCKET *sSocket, SOCKET *cSocket) :currentPlayer(nullptr),mode(FAIL),serverSocket(sSocket),clientSocket(cSocket)
 {
 	loadChallenger();
 	
@@ -16,7 +16,7 @@ game::game(SOCKET *sSocket = nullptr, SOCKET *cSocket = nullptr):currentPlayer(n
 	loadVocabulary();
 	player::allRankInit();
 	challenger::levelExpInit();
-	designer::levelWordInit();
+	designer::levelPuzzleInit();
 }
 
 game::~game()
@@ -453,7 +453,7 @@ void game::searchChallenger(string name, int level, int exp, int pass)
 	if (!flag) cout << "用户不存在！" << endl;
 }
 
-void game::searchDesigner(string name, int level, int word)
+void game::searchDesigner(string name, int level, int wordCount)
 {
 	auto begin = designerInfo.begin(), end = designerInfo.end();
 	bool flag = false;
@@ -485,11 +485,11 @@ void game::searchDesigner(string name, int level, int word)
 			begin++;
 		}
 	}
-	else if (word != -1)
+	else if (wordCount != -1)
 	{
 		while (begin != end)
 		{
-			if (begin->second->getWord() == word)
+			if (begin->second->getPuzzle() == wordCount)
 			{
 				begin->second->showInfo();
 				flag = true;
@@ -620,7 +620,7 @@ void game::saveDesigner()
 	while (begin != end)
 	{
 		out << begin->second->getName() << " " << begin->second->getPw() << " " << begin->second->getLevel()<<" "
-			<< begin->second->getWord() << endl;
+			<< begin->second->getPuzzle() << endl;
 		begin++;
 	}
 	out.close();
