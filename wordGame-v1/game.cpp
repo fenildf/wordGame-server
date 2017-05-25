@@ -469,6 +469,8 @@ void game::searchChallenger(string name, int level, int exp, int pass)
 		{
 			if (begin->first == name)
 			{
+				sprintf(recvbuf, "%d", 1);
+				send(clientSocket, recvbuf, strlen(recvbuf)+1, 0);
 				begin->second->showInfo();
 				flag = true;
 				return;
@@ -485,6 +487,8 @@ void game::searchChallenger(string name, int level, int exp, int pass)
 		{
 			if (begin->second->getLevel() == level)
 			{
+				sprintf(recvbuf, "%d", 1);
+				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 				begin->second->showInfo();
 				flag = true;
 			}
@@ -497,6 +501,8 @@ void game::searchChallenger(string name, int level, int exp, int pass)
 		{
 			if (begin->second->getPass() == pass)
 			{
+				sprintf(recvbuf, "%d", 1);
+				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 				begin->second->showInfo();
 				flag = true;
 			}
@@ -509,12 +515,16 @@ void game::searchChallenger(string name, int level, int exp, int pass)
 		{
 			if (begin->second->getExp() == exp)
 			{
+				sprintf(recvbuf, "%d", 1);
+				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 				begin->second->showInfo();
 				flag = true;
 			}
 			begin++;
 		}
 	}
+	sprintf(recvbuf, "%d", 0);
+	send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	if (!flag) cout << "用户不存在！" << endl;
 }
 
@@ -528,6 +538,8 @@ void game::searchDesigner(string name, int level, int wordCount)
 		{
 			if (begin->first == name)
 			{
+				sprintf(recvbuf, "%d", 1);
+				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 				begin->second->showInfo();
 				flag = true;
 				return;
@@ -544,6 +556,8 @@ void game::searchDesigner(string name, int level, int wordCount)
 		{
 			if (begin->second->getLevel() == level)
 			{
+				sprintf(recvbuf, "%d", 1);
+				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 				begin->second->showInfo();
 				flag = true;
 			}
@@ -556,12 +570,16 @@ void game::searchDesigner(string name, int level, int wordCount)
 		{
 			if (begin->second->getPuzzle() == wordCount)
 			{
+				sprintf(recvbuf, "%d", 1);
+				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 				begin->second->showInfo();
 				flag = true;
 			}
 			begin++;
 		}
 	}
+	sprintf(recvbuf, "%d", 1);
+	send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	if (!flag) cout << "用户不存在！" << endl;
 }
 
