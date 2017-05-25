@@ -4,4 +4,4 @@
 #include <Windows.h>
 #include <stdlib.h>
 #include <WS2tcpip.h>
-void clientLink(SOCKET *ServerSocket, SOCKET *clientSocket);
+void clientLink(SOCKET ServerSocket, SOCKET clientSocket);

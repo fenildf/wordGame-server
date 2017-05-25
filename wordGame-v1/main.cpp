@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <vector>
+#include "game.h"
+#include "player.h"
 #pragma comment (lib,"ws2_32.lib")
 
 #define DEFAULT_BUFLEN 512
@@ -18,11 +20,14 @@ int main()
 {
 	/*game g;
 	g.run();*/
+	player::allRankInit();
+	challenger::levelExpInit();
+	designer::levelPuzzleInit();
 
 	//联网功能初始化
 	WSADATA wsaData;
 	int iResult;
-
+	
 	SOCKET listenSocket = INVALID_SOCKET, clientSocket = INVALID_SOCKET;
 	struct addrinfo *result = nullptr;
 	struct addrinfo hints;
@@ -63,7 +68,7 @@ int main()
 
 	freeaddrinfo(result);
 
-	if (listen(listenSocket, SOMAXCONN) != SOCKET_ERROR)
+	if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR)
 	{
 		std::cout << "联网失败！" << std::endl;
 		closesocket(listenSocket);
@@ -78,7 +83,7 @@ int main()
 	{
 		clientSocket = accept(listenSocket, nullptr, nullptr);
 		if (clientSocket == INVALID_SOCKET) continue;
-		multiClient.push_back(new std::thread(clientLink, &listenSocket, &clientSocket));
+		multiClient.push_back(new std::thread(clientLink, listenSocket, clientSocket));
 	}
 
 	system("pause");

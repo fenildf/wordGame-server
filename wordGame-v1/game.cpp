@@ -7,16 +7,16 @@
 #include <ctime>
 using namespace std;
 
-game::game(SOCKET *sSocket, SOCKET *cSocket) :currentPlayer(nullptr),mode(FAIL),serverSocket(sSocket),clientSocket(cSocket)
+game::game(SOCKET sSocket, SOCKET cSocket) :currentPlayer(nullptr),mode(FAIL),serverSocket(sSocket),clientSocket(cSocket)
 {
 	loadChallenger();
 	
 	loadDesigner();
 
 	loadVocabulary();
-	player::allRankInit();
-	challenger::levelExpInit();
-	designer::levelPuzzleInit();
+	//player::allRankInit();
+	//challenger::levelExpInit();
+	//designer::levelPuzzleInit();
 }
 
 game::~game()
@@ -57,42 +57,73 @@ Mode game::Login()
 	map<string, player*> *user = nullptr;
 
 	cout << "选择登录类型(0.闯关\t1.出题\t2.返回):";
-	cin >> type;
+	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+	type = recvbuf;
+	/*
 	while (type != "0"&&type != "1"&&type != "2")
 	{
 		cout << "选择登录类型(0.闯关\t1.出题\t2.返回):";
 		cin >> type;
-	}
+	}*/
 	if (type == "2") return FAIL;
 	else if (stoi(type) == CHALLENGE) user = &ChallengerInfo;
 	else user = &designerInfo;
 	cout << "请输入用户名(输入\"r\"返回)：";
-	cin >> name;
+	//cin >> name;
+	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+	name = recvbuf;
 	while (name!="r")
 	{
 		auto target = (*user).find(name);
 		if (target != (*user).end())
 		{
+			sprintf(recvbuf, "%d", 1);
+			send(clientSocket, recvbuf, MAX_BUFLEN, 0);
 			cout << "请输入密码：";
-			cin >> pw;
+			//cin >> pw;
+			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+			pw = recvbuf;
+			
 			while (pw!="r"&&pw != target->second->getPw())
 			{
+				sprintf(recvbuf, "%d", 0);
+				send(clientSocket, recvbuf, MAX_BUFLEN, 0);
+
 				cout << "密码错误！" << endl;
 				cout << "请输入密码(输入\"r\"返回)：";
-				cin >> pw;
+				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+				pw = recvbuf;
 			}
 			if (pw == "r") name = "r";
 			else {
+				sprintf(recvbuf, "%d", 1);
+				send(clientSocket, recvbuf, strlen(recvbuf)+1, 0);
+
+				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+				
 				currentPlayer = target->second;
+				if (stoi(type) == CHALLENGE)
+				{
+					sprintf(recvbuf, "%s %s %d %d %d", currentPlayer->getName().c_str(), currentPlayer->getPw().c_str(), currentPlayer->getLevel(), currentPlayer->getPass(), currentPlayer->getExp());
+				}
+				else
+				{
+					sprintf(recvbuf, "%s %s %d %d", currentPlayer->getName().c_str(), currentPlayer->getPw().c_str(), currentPlayer->getLevel(), currentPlayer->getPuzzle());
+				}
+				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
+
 				currentPlayer->getAllUser(&ChallengerInfo,&designerInfo);
 				return Mode(stoi(type));
 			}
 		}
 		else
 		{
+			sprintf(recvbuf, "%d", 0);
+			send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 			cout << "找不到该用户！" << endl;
 			cout << "请输入用户名(输入\"r\"返回)：";
-			cin >> name;
+			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+			name = recvbuf;
 		}
 	}
 	return FAIL;
@@ -105,32 +136,40 @@ Mode game::Register()
 	map<string, player*> *user = nullptr;
 
 	cout << "选择注册类型(0.闯关\t1.出题\t2.返回):";
-	cin >> type;
-	while (type != "0"&&type != "1"&&type != "2")
+	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+	type = recvbuf;
+	/*while (type != "0"&&type != "1"&&type != "2")
 	{
 		cout << "选择注册类型(0.闯关\t1.出题\t2.返回):";
 		cin >> type;
-	}
+	}*/
 	if (type == "2") return FAIL;
 	else if (stoi(type) == CHALLENGE) user = &ChallengerInfo;
 	else user = &designerInfo;
 
 	cout << "请输入用户名(输入\"r\"返回)：";
-	cin >> name;
+	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+	name = recvbuf;
 	while (name != "r")
 	{
 		auto target = (*user).find(name);
 		if (target == (*user).end())
 		{
+			sprintf(recvbuf, "%d", 1);
+			send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 			cout << "请输入密码：";
-			cin >> pw;
+			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+			pw = recvbuf;
+			/*
 			while (pw.size() == 0)
 			{
 				cout << "请输入密码(输入\"r\"返回)：";
 				cin >> pw;
-			}
+			}*/
 			if (pw == "r") name = "r";
 			else {
+				sprintf(recvbuf, "%d", 1);
+				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 				player *new_player = nullptr;
 				if (stoi(type) == CHALLENGE)
 				{
@@ -150,9 +189,12 @@ Mode game::Register()
 		}
 		else
 		{
+			sprintf(recvbuf, "%d", 0);
+			send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 			cout << "用户已存在！" << endl;
 			cout << "请输入用户名(输入\"r\"返回)：";
-			cin >> name;
+			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+			name = recvbuf;
 		}
 	}
 	return FAIL;
@@ -162,15 +204,12 @@ int game::userIn()
 {
 	string option;
 	cout << "请选择：0.登录\t1.注册\t2.退出" << endl;
-	cin >> option;
+	//cin >> option;
+	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+	option = recvbuf;
 	int op = 0;
 	while (mode == FAIL&&op != QUIT)
 	{
-		while (option!="0"&&option != "1"&&option != "2")
-		{
-			cout << "请输入正确的选项：0.登录\t1.注册\t2.退出" << endl;
-			cin >> option;
-		}
 		if (option == "2") op = QUIT;
 		else op = stoi(option);
 
@@ -198,7 +237,8 @@ int game::challengeUi()
 	string choice;
 	cout << "*************************闯 关 者 界 面*************************" << endl;
 	cout << "请选择：0.开始游戏\t1.查看排名\t2.查找用户\t3.注销\t4.退出" << endl;
-	cin >> choice;
+	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+	choice = recvbuf;
 	while (choice!="3"&&choice!="4")
 	{
 		if (choice == "0") challenge();
@@ -219,11 +259,11 @@ int game::challengeUi()
 
 void game::challenge()
 {
-	system("cls");
+	//system("cls");
 
 	string currentWord;
 	auto begin = vocabulary.begin(), end = vocabulary.end();
-	int pass = 0;
+	int pass = 0, solved = 0;
 	int duration = 10000;
 	default_random_engine e(time(0));
 	uniform_int_distribution<unsigned> u(0, 100);
@@ -234,13 +274,16 @@ void game::challenge()
 		
 		cout << "************************第 " << pass + 1 << " 关************************" << endl;
 		currentWord = begin->second[u(e) % begin->second.size()];
-		cout << currentWord << endl;
-		_sleep(duration);
-		system("cls");
+		//cout << currentWord << endl;
+		//_sleep(duration);
+		//system("cls");
+		send(clientSocket, currentWord.c_str(), currentWord.size() + 1, 0);
 
 		cout << "************************第 " << pass + 1 << " 关************************" << endl;
 		cout << "输入答案:" << endl;
-		while (currentPlayer->solve(currentWord))
+		recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+		sscanf(recvbuf, "%d", &solved);
+		while (solved)
 		{
 			pass++;
 			begin++;
@@ -249,26 +292,33 @@ void game::challenge()
 			currentPlayer->refreshInfo(((pass + 1) % 5 + 1) * 10);
 			currentPlayer->reRank();
 			currentWord = begin->second[u(e) % begin->second.size()];
-			system("cls");
+			//system("cls");
 
 			cout << "************************第 " << pass + 1 << " 关************************" << endl;
-			cout << currentWord << endl;
+			send(clientSocket, currentWord.c_str(), currentWord.size() + 1, 0);
 			if ((pass - 1) % 5 == 0 && duration >= 1000) duration -= 500;
-			_sleep(duration);
-			system("cls");
+			//_sleep(duration);
+			//system("cls");
 			cout << "************************第 " << pass + 1 << " 关************************" << endl;
 			cout << "输入答案:" << endl;
+			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+			sscanf(recvbuf, "%d", &solved);
 		}
-		if (begin == end) cout << "恭喜全部通关！" << endl;
+		if (begin == end)
+		{
+			cout << "恭喜全部通关！" << endl;
+			send(clientSocket, "end!", 5, 0);
+		}
 		currentPlayer->showInfo();
 
 		cout << "再来一次？y/n" << endl;
-		cin >> again;
-		while (again!="y"&&again!="n")
+		recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+		again = recvbuf;
+		/*while (again!="y"&&again!="n")
 		{
 			cout << "y/n?" << endl;
 			cin >> again;
-		}
+		}*/
 		pass = 0;
 		duration = 0;
 		begin = vocabulary.begin();
