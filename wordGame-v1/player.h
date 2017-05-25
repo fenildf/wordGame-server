@@ -1,4 +1,6 @@
 #pragma once
+#define WIN32_LEAN_AND_MEAN
+
 #include <string>
 #include <vector>
 #include <map>
@@ -16,7 +18,15 @@ public:
 	player():level(0),clgInfo(nullptr),dsInfo(nullptr){}
 	player(const player& p);
 	player& operator=(const player& p);
-	player(std::string n, std::string pw,int l=0) :name(n), password(pw),level(l), clgInfo(nullptr), dsInfo(nullptr) {}
+	player(std::string n, std::string pw, int l = 0, int ol = 0) :name(n), password(pw), level(l), clgInfo(nullptr), dsInfo(nullptr), online(ol)
+	{
+		busy = 0;
+		isNew = 0;
+		chalOk = 0;
+		wasCha = 0;
+		reply = 0;
+		over = 1;
+	}
 	virtual ~player()
 	{
 
@@ -30,7 +40,7 @@ public:
 	virtual int getPuzzle() const { return 0; }
 	void getAllUser(std::map<std::string, player*> *pclg, std::map<std::string, player*> *pds) { clgInfo = pclg, dsInfo = pds; }
 	virtual bool rank(std::string n,Mode m) = 0;
-	virtual bool showInfo() = 0;
+	virtual bool showInfo(char recvbuf[]) = 0;
 	//virtual void levelInc(int exp) = 0;
 	virtual void reRank() = 0;
 	virtual void refreshInfo(int d) = 0;
@@ -40,6 +50,17 @@ public:
 	static void allRankInit();
 	static void saveAllRank();
 	void setSocket(SOCKET cSocket) { currentSocket = cSocket; }
+	int isOnline() { return online; }
+	void setOnline() { online = 1; }
+	int busy;
+	int isNew;
+	int chalOk;
+	int wasCha;
+	int reply;
+	int over;
+	//pair<int, int> result;
+	int judge;
+	SOCKET currentSocket;
 protected:
 	std::string name;
 	std::string password;
@@ -47,8 +68,8 @@ protected:
 	std::map<std::string, player*> *clgInfo;
 	std::map<std::string, player*> *dsInfo;
 	int level;
-	char recvbuf[512];
-	SOCKET currentSocket;
+	
+	int online;
 	static std::vector<std::string> cLevelRanking;
 	static std::vector<std::string> dLevelRanking;
 	static std::vector<std::string> expRanking;
@@ -71,7 +92,7 @@ public:
 	int getExp() const { return exp; }
 	bool solve(std::string puzzle);
 	bool rank(std::string n,Mode m);
-	bool showInfo();
+	bool showInfo(char recvbuf[]);
 	void reRank();
 	//void levelInc(int dExp);
 	void refreshInfo(int d);
@@ -100,7 +121,7 @@ public:
 	bool rank(std::string n, Mode m);
 
 	void refreshInfo(int d);
-	bool showInfo();
+	bool showInfo(char recvbuf[]);
 	void reRank();
 
 	int getPuzzle() const { return puzzle; }

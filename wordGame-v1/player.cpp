@@ -90,8 +90,8 @@ bool challenger::rank(string n, Mode m)
 		//if (lr == 0 || pr == 0 || er == 0) return false;
 		cout << "属性\t" << "等级\t" << "关卡\t" << "经验\t" << endl;
 		cout << "排名\t" << lr << "\t" << pr << "\t" << er << "\t" << endl;
-		sprintf(recvbuf, "%d %d %d", lr, pr, er);
-		send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
+		//sprintf(recvbuf, "%d %d %d", lr, pr, er);
+		//send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	}
 	else
 	{
@@ -104,21 +104,21 @@ bool challenger::rank(string n, Mode m)
 		//if (lr == 0 || wr == 0) return false;
 		cout << "属性\t" << "等级\t" << "出题数\t" << endl;
 		cout << "排名\t" << lr << "\t" << wr << "\t" << endl;
-		sprintf(recvbuf, "%d %d", lr, wr);
-		send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
+		//sprintf(recvbuf, "%d %d", lr, wr);
+		//send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	}
 	return true;
 }
 
-bool challenger::showInfo()
+bool challenger::showInfo(char recvbuf[])
 {
 	cout << "姓名\t" << "等级\t" << "闯关数\t" << "经验" << endl;
-	cout << name << "\t" << level << "\t" << pass << "\t" << exp << "\t" << endl;
+	//cout << name << "\t" << level << "\t" << pass << "\t" << exp << "\t" << endl;
 	cout << endl;
 	sprintf(recvbuf, "%s %d %d %d", name.c_str(), level, pass, exp);
 	send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 
-	rank(name, CHALLENGE);
+	//rank(name, CHALLENGE);
 	cout << "**************************************************************" << endl;
 	return true;
 }
@@ -222,8 +222,8 @@ bool designer::rank(string n, Mode m)
 		//if (lr == 0 || pr == 0 || er == 0) return false;
 		cout  << "属性\t" << "等级\t" << "关卡\t" << "经验\t" << endl;
 		cout << "排名\t" << lr << "\t" << pr << "\t" << er << "\t" << endl;
-		sprintf(recvbuf, "%d %d %d", lr, pr, er);
-		send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
+		//sprintf(recvbuf, "%d %d %d", lr, pr, er);
+		//send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	}
 	else
 	{
@@ -236,8 +236,8 @@ bool designer::rank(string n, Mode m)
 		//if (lr == 0 || wr == 0) return false;
 		cout <<"属性\t" << "等级\t" << "出题数\t" << endl;
 		cout << "排名\t" << lr << "\t" << wr << "\t" << endl;
-		sprintf(recvbuf, "%d %d", lr, wr);
-		send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
+		//sprintf(recvbuf, "%d %d", lr, wr);
+		//send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	}
 	return true;
 }
@@ -248,15 +248,15 @@ void designer::refreshInfo(int d)
 	if (level < MAX_LEVEL&&puzzle >= levelPuzzle[level + 1]) level++;
 }
 
-bool designer::showInfo()
+bool designer::showInfo(char recvbuf[])
 {
 	cout << "姓名\t" << "等级\t" << "出题数" << endl;
-	cout << name << "\t" << level << "\t" << puzzle << endl;
+	//cout << name << "\t" << level << "\t" << puzzle << endl;
 	cout << endl;
 	sprintf(recvbuf, "%s %d %d", name.c_str(), level, puzzle);
 	send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 
-	rank(name, DESIGN);
+	//rank(name, DESIGN);
 	cout << "**************************************************************" << endl;
 	return true;
 }

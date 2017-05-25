@@ -1,9 +1,11 @@
 #pragma once
+
 #include "player.h"
 #include <map>
 #include <vector>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
+#include <string>
 
 #define MAX_BUFLEN 512
 enum OPTION{LOGIN,REGISTER,LOGOUT,QUIT};
@@ -12,7 +14,7 @@ enum OPTION{LOGIN,REGISTER,LOGOUT,QUIT};
 class game
 {
 public:
-	game(SOCKET sSocket = 0, SOCKET cSocket = 0);
+	game(std::map<std::string, player*> *cli, std::map<std::string, player*> *dsi, std::map<int, std::vector<std::string>> *vc, SOCKET sSocket = 0, SOCKET cSocket = 0);
 	~game();
 	void run();//运行游戏
 private:
@@ -23,11 +25,11 @@ private:
 	void challenge();//闯关者进行游戏
 	void rank();//查看排名
 	void search();//查找玩家
-	void searchChallenger(std::string name, int level, int exp, int pass);//查找闯关者
+	void searchChallenger(std::string name, int level, int exp, int pass,int online);//查找闯关者
 	void searchDesigner(std::string name, int level, int word);//查找出题者
 	int designUi();//出题者界面
 	void design();//出题者出题
-	
+	void match(std::string n);
 
 	//加载闯关者，出题者和题目数据
 	void loadChallenger();
@@ -43,9 +45,10 @@ private:
 	SOCKET clientSocket;
 	int currentPass;//当前关卡
 	Mode mode;//当前登录模式
-	std::map<std::string, player*> ChallengerInfo;//存储所有闯关者信息
-	std::map<std::string, player*> designerInfo;//存储所有出题者信息
-	std::map<int, std::vector<std::string>> vocabulary;//题目（单词）表
+	std::map<std::string, player*> *ChallengerInfo;//存储所有闯关者信息
+	std::map<std::string, player*> *designerInfo;//存储所有出题者信息
+	std::map<int, std::vector<std::string>> *vocabulary;//题目（单词）表
 	char recvbuf[MAX_BUFLEN];
+	
 };
 
