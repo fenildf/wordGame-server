@@ -41,7 +41,7 @@ public:
 	void getAllUser(std::map<std::string, player*> *pclg, std::map<std::string, player*> *pds) { clgInfo = pclg, dsInfo = pds; }
 	virtual bool rank(std::string n,Mode m) = 0;
 	virtual bool showInfo(char recvbuf[]) = 0;
-	//virtual void levelInc(int exp) = 0;
+	
 	virtual void reRank() = 0;
 	virtual void refreshInfo(int d) = 0;
 	virtual int getAttr(ATTR a);
@@ -58,8 +58,7 @@ public:
 	int wasCha;
 	int reply;
 	int over;
-	//pair<int, int> result;
-	int judge;
+	std::string opponent;
 	SOCKET currentSocket;
 protected:
 	std::string name;

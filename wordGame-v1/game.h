@@ -26,7 +26,7 @@ private:
 	void rank();//查看排名
 	void search();//查找玩家
 	void searchChallenger(std::string name, int level, int exp, int pass,int online);//查找闯关者
-	void searchDesigner(std::string name, int level, int word);//查找出题者
+	void searchDesigner(std::string name, int level, int word, int online);//查找出题者
 	int designUi();//出题者界面
 	void design();//出题者出题
 	void match(std::string n);
@@ -49,6 +49,5 @@ private:
 	std::map<std::string, player*> *designerInfo;//存储所有出题者信息
 	std::map<int, std::vector<std::string>> *vocabulary;//题目（单词）表
 	char recvbuf[MAX_BUFLEN];
-	
 };
 

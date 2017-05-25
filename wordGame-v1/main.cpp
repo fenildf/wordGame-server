@@ -106,9 +106,7 @@ int main()
 	player::allRankInit();
 	challenger::levelExpInit();
 	designer::levelPuzzleInit();
-	//std::map<int, std::vector<std::string>> vocabulary;
-	//std::map<std::string, player*> ChallengerInfo;//存储所有闯关者信息
-	//std::map<std::string, player*> designerInfo;//存储所有出题者信息
+	
 	loadChallenger(ChallengerInfo);
 	loadDesigner(designerInfo);
 	loadVocabulary(vocabulary);

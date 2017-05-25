@@ -64,17 +64,12 @@ Mode game::Login()
 	cout << "选择登录类型(0.闯关\t1.出题\t2.返回):";
 	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 	type = recvbuf;
-	/*
-	while (type != "0"&&type != "1"&&type != "2")
-	{
-		cout << "选择登录类型(0.闯关\t1.出题\t2.返回):";
-		cin >> type;
-	}*/
+	send(clientSocket, "1", 2, 0);
 	if (type == "2") return FAIL;
 	else if (stoi(type) == CHALLENGE) user = ChallengerInfo;
 	else user = designerInfo;
 	cout << "请输入用户名(输入\"r\"返回)：";
-	//cin >> name;
+	
 	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 	name = recvbuf;
 	while (name!="r")
@@ -83,9 +78,9 @@ Mode game::Login()
 		if (target != (*user).end())
 		{
 			sprintf(recvbuf, "%d", 1);
-			send(clientSocket, recvbuf, MAX_BUFLEN, 0);
+			//send(clientSocket, recvbuf, MAX_BUFLEN, 0);
 			cout << "请输入密码：";
-			//cin >> pw;
+			
 			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 			pw = recvbuf;
 			
@@ -428,12 +423,7 @@ void game::search()
 			cout << "属性(0.姓名\t1.等级\t2.闯关数\t3.经验\t4.在线):";
 			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 			aChoice = recvbuf;
-			/*
-			while (aChoice != "0"&&aChoice != "1"&&aChoice != "2"&&aChoice != "3")
-			{
-				cout << "请输入属性(0.姓名\t1.等级\t2.闯关数\t3.经验):";
-				cin >> aChoice;
-			}*/
+			
 			switch (stoi(aChoice))
 			{
 			case 0:
@@ -484,30 +474,29 @@ void game::search()
 			cout << "属性(0.姓名\t1.等级\t2.出题数):";
 			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 			aChoice = recvbuf;
-			/*while (aChoice != "0"&&aChoice != "1"&&aChoice != "2")
-			{
-				cout << "请输入属性(0.姓名\t1.等级\t2.出题数):";
-				cin >> aChoice;
-			}*/
+			
 			switch (stoi(aChoice))
 			{
 			case 0:
 				cout << "姓名:";
 				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 				attr = recvbuf;
-				searchDesigner(attr, -1, -1);
+				searchDesigner(attr, -1, -1,0);
 				break;
 			case 1:
 				cout << "等级:";
 				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 				attr = recvbuf;
-				searchDesigner(string(), stoi(attr), -1);
+				searchDesigner(string(), stoi(attr), -1, 0);
 				break;
 			case 2:
 				cout << "出题数:";
 				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 				attr = recvbuf;
-				searchDesigner(string(), -1, stoi(attr));
+				searchDesigner(string(), -1, stoi(attr),0);
+				break;
+			case 3:
+				searchDesigner(string(), -1, -1,1);
 				break;
 			default:
 				break;
@@ -531,11 +520,6 @@ void game::searchChallenger(string name, int level, int exp, int pass,int online
 		{
 			if (begin->first == name)
 			{
-				//sprintf(recvbuf, "%d", 1);
-				//send(clientSocket, "1", 2, 0);
-				//recv(clientSocket, recvbuf, 2, 0);
-				//begin->second->showInfo(recvbuf);
-				//flag = true;
 				temp.push_back(begin->second);
 			}
 			begin++;
@@ -585,9 +569,7 @@ void game::searchChallenger(string name, int level, int exp, int pass,int online
 			begin++;
 		}
 	}
-	//sprintf(recvbuf, "%d", 0);
-	//send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
-	//send(clientSocket, "0", 2, 0);
+
 	sprintf(recvbuf, "%d", temp.size());
 	send(clientSocket, recvbuf, strlen(recvbuf)+1, 0);
 	for (int i = 0; i < temp.size(); i++)
@@ -596,24 +578,20 @@ void game::searchChallenger(string name, int level, int exp, int pass,int online
 		send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 		recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 	}
-	//if (!flag) cout << "用户不存在！" << endl;
 }
 
-void game::searchDesigner(string name, int level, int wordCount)
+void game::searchDesigner(string name, int level, int wordCount, int online)
 {
 	auto begin = designerInfo->begin(), end = designerInfo->end();
 	bool flag = false;
+	vector<player*> temp;
 	if (name != string())
 	{
 		while (begin != end)
 		{
 			if (begin->first == name)
 			{
-				sprintf(recvbuf, "%d", 1);
-				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
-				
-				begin->second->showInfo(recvbuf);
-				flag = true;
+				temp.push_back(begin->second);
 			}
 			begin++;
 		}
@@ -624,10 +602,7 @@ void game::searchDesigner(string name, int level, int wordCount)
 		{
 			if (begin->second->getLevel() == level)
 			{
-				sprintf(recvbuf, "%d", 1);
-				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
-				begin->second->showInfo(recvbuf);
-				flag = true;
+				temp.push_back(begin->second);
 			}
 			begin++;
 		}
@@ -638,17 +613,30 @@ void game::searchDesigner(string name, int level, int wordCount)
 		{
 			if (begin->second->getPuzzle() == wordCount)
 			{
-				sprintf(recvbuf, "%d", 1);
-				send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
-				begin->second->showInfo(recvbuf);
-				flag = true;
+				temp.push_back(begin->second);
 			}
 			begin++;
 		}
 	}
-	sprintf(recvbuf, "%d", 1);
+	else if(online==1)
+	{
+		while (begin != end)
+		{
+			if (begin->second->isOnline())
+			{
+				temp.push_back(begin->second);
+			}
+			begin++;
+		}
+	}
+	sprintf(recvbuf, "%d", temp.size());
 	send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
-	if (!flag) cout << "用户不存在！" << endl;
+	for (int i = 0; i < temp.size(); i++)
+	{
+		sprintf(recvbuf, "%s %d %d", temp[i]->getName().c_str(), temp[i]->getLevel(), temp[i]->getPuzzle());
+		send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
+		recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+	}
 }
 
 int game::designUi()
@@ -731,6 +719,7 @@ void game::match(string name)
 	else
 	{
 		beg->second->wasCha = 1;
+		beg->second->opponent = currentPlayer->getName();
 		while (!beg->second->isNew)
 		{
 			continue;
@@ -738,9 +727,9 @@ void game::match(string name)
 		if (beg->second->reply == 1)
 		{
 			send(clientSocket, "4", 2, 0);
+			currentPlayer->opponent = name;
 			std::thread tr =std::thread(matchJudge, currentPlayer, beg->second);
-			//Sleep(1000);
-			//while (currentPlayer->over != 1) continue;
+			
 			tr.join();
 		}
 		else
@@ -846,15 +835,11 @@ void matchJudge(player *c1, player *c2)
 	default_random_engine e(time(0));
 	uniform_int_distribution<unsigned> u(0, 100);
 
-	//string again = "y";
-	//while (again == "y")
 	{
 
 		cout << "************************第 " << pass + 1 << " 关************************" << endl;
 		currentWord = begin->second[u(e) % begin->second.size()];
-		//cout << currentWord << endl;
-		//_sleep(duration);
-		//system("cls");
+		
 		send(c1->currentSocket, currentWord.c_str(), currentWord.size() + 1, 0);
 		send(c2->currentSocket, currentWord.c_str(), currentWord.size() + 1, 0);
 
@@ -874,23 +859,26 @@ void matchJudge(player *c1, player *c2)
 			
 			if (duration1 < duration2)
 			{
-				c1->refreshInfo(((pass + 1) % 5 + 1) * 10);
+				c1->refreshInfo(((pass + 1) % 5 + 1) * 20);
 				c1->reRank();
+				c2->refreshInfo(-((pass + 1) % 5 + 1) * 5);
+				c2->reRank();
 			}
 			else
 			{
-				c2->refreshInfo(((pass + 1) % 5 + 1) * 10);
+				c2->refreshInfo(((pass + 1) % 5 + 1) * 20);
 				c2->reRank();
+				c1->refreshInfo(-((pass + 1) % 5 + 1) * 5);
+				c1->reRank();
 			}
 			currentWord = begin->second[u(e) % begin->second.size()];
-			//system("cls");
+			
 
 			cout << "************************第 " << pass + 1 << " 关************************" << endl;
 			send(c1->currentSocket, currentWord.c_str(), currentWord.size() + 1, 0);
 			send(c2->currentSocket, currentWord.c_str(), currentWord.size() + 1, 0);
 			if ((pass - 1) % 5 == 0 && duration >= 1000) duration -= 500;
-			//_sleep(duration);
-			//system("cls");
+			
 			cout << "************************第 " << pass + 1 << " 关************************" << endl;
 			cout << "输入答案:" << endl;
 			recv(c1->currentSocket, recvbuf1, MAX_BUFLEN, 0);

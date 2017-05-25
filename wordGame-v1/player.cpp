@@ -134,7 +134,7 @@ void challenger::refreshInfo(int d)
 {
 	exp += d;
 	if (level < MAX_LEVEL&&exp >= levelExp[level + 1]) level++;
-	pass++;
+	if (d > 0) pass++;
 }
 
 void challenger::addChallenger(string n)
