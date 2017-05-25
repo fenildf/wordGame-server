@@ -2,6 +2,9 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <Windows.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
 
 const int EXP_PER_PASS = 100;
 const int MAX_LEVEL = 100;
@@ -36,6 +39,7 @@ public:
 	virtual std::string design(std::vector<std::string> &vocabulary) { return std::string(); }
 	static void allRankInit();
 	static void saveAllRank();
+	void setSocket(SOCKET cSocket) { currentSocket = cSocket; }
 protected:
 	std::string name;
 	std::string password;
@@ -43,6 +47,8 @@ protected:
 	std::map<std::string, player*> *clgInfo;
 	std::map<std::string, player*> *dsInfo;
 	int level;
+	char recvbuf[512];
+	SOCKET currentSocket;
 	static std::vector<std::string> cLevelRanking;
 	static std::vector<std::string> dLevelRanking;
 	static std::vector<std::string> expRanking;

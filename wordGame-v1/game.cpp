@@ -102,6 +102,7 @@ Mode game::Login()
 				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 				
 				currentPlayer = target->second;
+				currentPlayer->setSocket(clientSocket);
 				if (stoi(type) == CHALLENGE)
 				{
 					sprintf(recvbuf, "%s %s %d %d %d", currentPlayer->getName().c_str(), currentPlayer->getPw().c_str(), currentPlayer->getLevel(), currentPlayer->getPass(), currentPlayer->getExp());
@@ -184,6 +185,7 @@ Mode game::Register()
 				(*user).insert(make_pair(name, new_player));
 				currentPlayer = new_player;
 				currentPlayer->getAllUser(&ChallengerInfo,&designerInfo);
+				currentPlayer->setSocket(clientSocket);
 				return Mode(stoi(type));
 			}
 		}
@@ -246,7 +248,8 @@ int game::challengeUi()
 		else if (choice == "2") search();
 
 		cout << "请选择：0.开始游戏\t1.查看排名\t2.查找用户\t3.注销\t4.退出" << endl;
-		cin >> choice;
+		recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+		choice = recvbuf;
 	}
 	if (choice == "3")
 	{
@@ -370,38 +373,46 @@ void game::search()
 	string aChoice;
 	cout << "**********************查 找 用 户**********************" << endl;
 	cout << "类型(0.闯关者\t1.出题者\t2.返回):";
-	cin >> choice;
+	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+	aChoice = recvbuf;
 	while (choice!="2")
 	{
 		if (choice == "0")
 		{
 			cout << "属性(0.姓名\t1.等级\t2.闯关数\t3.经验):";
-			cin >> aChoice;
+			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+			aChoice = recvbuf;
+			/*
 			while (aChoice != "0"&&aChoice != "1"&&aChoice != "2"&&aChoice != "3")
 			{
 				cout << "请输入属性(0.姓名\t1.等级\t2.闯关数\t3.经验):";
 				cin >> aChoice;
-			}
+			}*/
 			switch (stoi(aChoice))
 			{
 			case 0:
 				cout << "姓名:";
-				cin >> attr;
+				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+				attr = recvbuf;
+
 				searchChallenger(attr, -1, -1, -1);
 				break;
 			case 1:
 				cout << "等级:";
-				cin >> attr;
+				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+				attr = recvbuf;
 				searchChallenger(string(), stoi(attr), -1, -1);
 				break;
 			case 2:
 				cout << "闯关数:";
-				cin >> attr;
+				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+				attr = recvbuf;
 				searchChallenger(string(), -1, stoi(attr), -1);
 				break;
 			case 3:
 				cout << "经验:";
-				cin >> attr;
+				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+				attr = recvbuf;
 				searchChallenger(string(), -1, -1, stoi(attr));
 				break;
 			default:
@@ -411,27 +422,31 @@ void game::search()
 		else if (choice == "1")
 		{
 			cout << "属性(0.姓名\t1.等级\t2.出题数):";
-			cin >> aChoice;
-			while (aChoice != "0"&&aChoice != "1"&&aChoice != "2")
+			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+			aChoice = recvbuf;
+			/*while (aChoice != "0"&&aChoice != "1"&&aChoice != "2")
 			{
 				cout << "请输入属性(0.姓名\t1.等级\t2.出题数):";
 				cin >> aChoice;
-			}
+			}*/
 			switch (stoi(aChoice))
 			{
 			case 0:
 				cout << "姓名:";
-				cin >> attr;
+				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+				attr = recvbuf;
 				searchDesigner(attr, -1, -1);
 				break;
 			case 1:
 				cout << "等级:";
-				cin >> attr;
+				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+				attr = recvbuf;
 				searchDesigner(string(), stoi(attr), -1);
 				break;
 			case 2:
 				cout << "出题数:";
-				cin >> attr;
+				recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+				attr = recvbuf;
 				searchDesigner(string(), -1, stoi(attr));
 				break;
 			default:
@@ -555,7 +570,9 @@ int game::designUi()
 	string choice;
 	cout << "*************************出 题 者 界 面*************************" << endl;
 	cout << "请选择：0.出题\t1.查看排名\t2.查找用户\t3.注销\t4.退出" << endl;
-	cin >> choice;
+	//cin >> choice;
+	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+	choice = recvbuf;
 	while (choice != "4" && choice != "3")
 	{
 		if (choice == "0") design();
@@ -563,7 +580,8 @@ int game::designUi()
 		else if (choice == "2") search();
 
 		cout << "请选择：0.出题\t1.查看排名\t2.查找用户\t3.注销\t4.退出" << endl;
-		cin >> choice;
+		recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+		choice = recvbuf;
 	}
 	if (choice == "3")
 	{
@@ -575,12 +593,13 @@ int game::designUi()
 
 void game::design()
 {
-	system("cls");
+	//system("cls");
 	string word;
 	int flag = 1;
 	cout << "*************************出 题*************************" << endl;
 	cout << "输入要添加的新词（输入!q停止出题）:";
-	cin >> word;
+	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+	word = recvbuf;
 	while (word != "!q")
 	{
 		auto &list = vocabulary[word.size()];
@@ -595,6 +614,8 @@ void game::design()
 				if (list[i] == word) flag = 0;
 			}
 		}
+		sprintf(recvbuf, "%d", flag);
+		send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 		if (flag)
 		{
 			cout << "添加成功！" << endl;
@@ -604,9 +625,10 @@ void game::design()
 		else cout << "单词已存在！" << endl;
 
 		cout << "输入要添加的新词（输入!q停止出题）:";
-		cin >> word;
+		recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+		word = recvbuf;
 	}
-	system("cls");
+	//system("cls");
 	currentPlayer->showInfo();
 }
 
