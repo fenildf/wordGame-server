@@ -39,7 +39,7 @@ public:
 	virtual int getExp() const { return 0; }
 	virtual int getPuzzle() const { return 0; }
 	void getAllUser(std::map<std::string, player*> *pclg, std::map<std::string, player*> *pds) { clgInfo = pclg, dsInfo = pds; }
-	virtual bool rank(std::string n,Mode m) = 0;
+	virtual int rank(Mode m) = 0;
 	virtual bool showInfo(char recvbuf[]) = 0;
 	
 	virtual void reRank() = 0;
@@ -60,6 +60,8 @@ public:
 	int over;
 	std::string opponent;
 	SOCKET currentSocket;
+	static std::vector<std::string> cLevelRanking;
+	static std::vector<std::string> dLevelRanking;
 protected:
 	std::string name;
 	std::string password;
@@ -69,11 +71,7 @@ protected:
 	int level;
 	
 	int online;
-	static std::vector<std::string> cLevelRanking;
-	static std::vector<std::string> dLevelRanking;
-	static std::vector<std::string> expRanking;
-	static std::vector<std::string> passRanking;
-	static std::vector<std::string> puzzleRanking;
+	
 	static void rankInit(std::vector<std::string> &ranking, std::string file);
 	static void saveRank(std::vector<std::string> ranking, std::string file);
 };
@@ -90,7 +88,7 @@ public:
 	int getPass() const { return pass; }
 	int getExp() const { return exp; }
 	bool solve(std::string puzzle);
-	bool rank(std::string n,Mode m);
+	int rank(Mode m);
 	bool showInfo(char recvbuf[]);
 	void reRank();
 	//void levelInc(int dExp);
@@ -117,7 +115,7 @@ public:
 	~designer();
 	static void levelPuzzleInit();
 	std::string design(std::vector<std::string> &vocabulary) { return std::string(); }
-	bool rank(std::string n, Mode m);
+	int rank(Mode m);
 
 	void refreshInfo(int d);
 	bool showInfo(char recvbuf[]);

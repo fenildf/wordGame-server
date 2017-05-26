@@ -14,26 +14,11 @@ void matchJudge(player *c1, player *c2);
 game::game(std::map<std::string, player*> *cli, std::map<std::string, player*> *dsi, std::map<int, std::vector<std::string>> *vc, SOCKET sSocket, SOCKET cSocket) :
 	ChallengerInfo(cli),designerInfo(dsi),vocabulary(vc), currentPlayer(nullptr),mode(FAIL),serverSocket(sSocket),clientSocket(cSocket)
 {
-	//loadChallenger();
-	
-	//loadDesigner();
-
-	//loadVocabulary();
-	//player::allRankInit();
-	//challenger::levelExpInit();
-	//designer::levelPuzzleInit();
 }
 
 game::~game()
 {
-	/*player::saveAllRank();
-	saveChallenger();
-	saveDesigner();
-	saveVocabulary();
-	auto cbegin = ChallengerInfo->begin(), cend = ChallengerInfo->end();
-	while (cbegin != cend) { delete cbegin->second; cbegin++; }
-	auto dbegin = designerInfo->begin(), dend = designerInfo.end();
-	while (dbegin != dend) { delete dbegin->second; dbegin++; }*/
+	player::saveAllRank();
 }
 
 void game::run()
@@ -64,7 +49,7 @@ Mode game::Login()
 	cout << "选择登录类型(0.闯关\t1.出题\t2.返回):";
 	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 	type = recvbuf;
-	send(clientSocket, "1", 2, 0);
+	//send(clientSocket, "1", 2, 0);
 	if (type == "2") return FAIL;
 	else if (stoi(type) == CHALLENGE) user = ChallengerInfo;
 	else user = designerInfo;
@@ -78,7 +63,7 @@ Mode game::Login()
 		if (target != (*user).end())
 		{
 			sprintf(recvbuf, "%d", 1);
-			//send(clientSocket, recvbuf, MAX_BUFLEN, 0);
+			send(clientSocket, recvbuf, MAX_BUFLEN, 0);
 			cout << "请输入密码：";
 			
 			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
@@ -140,11 +125,7 @@ Mode game::Register()
 	cout << "选择注册类型(0.闯关\t1.出题\t2.返回):";
 	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 	type = recvbuf;
-	/*while (type != "0"&&type != "1"&&type != "2")
-	{
-		cout << "选择注册类型(0.闯关\t1.出题\t2.返回):";
-		cin >> type;
-	}*/
+	
 	if (type == "2") return FAIL;
 	else if (stoi(type) == CHALLENGE) user = ChallengerInfo;
 	else user = designerInfo;
@@ -239,7 +220,7 @@ int game::userIn()
 int game::challengeUi()
 {
 	
-	sprintf(recvbuf, "%d", currentPlayer->wasCha);
+	sprintf(recvbuf, "%d %s", currentPlayer->wasCha,currentPlayer->opponent.c_str());
 	send(clientSocket, recvbuf, strlen(recvbuf)+1, 0);
 	if (currentPlayer->wasCha)
 	{
@@ -268,7 +249,7 @@ int game::challengeUi()
 		else if (choice == "1") rank();
 		else if (choice == "2") search();
 
-		sprintf(recvbuf, "%d", currentPlayer->wasCha);
+		sprintf(recvbuf, "%d %s", currentPlayer->wasCha, currentPlayer->opponent.c_str());
 		send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 		if (currentPlayer->wasCha)
 		{
@@ -366,44 +347,46 @@ void game::challenge()
 		duration = 0;
 		begin = vocabulary->begin();
 	}
+	currentPlayer->showInfo(recvbuf);
 
 	cout << "****************************************************" << endl;
 }
 
 void game::rank()
 {
-	cout << "*************************排 名*************************" << endl;
-	cout << "请选择：0.我的排名\t1.他人排名\t2.返回" << endl;
-	string choice;
-	cin >> choice;
-	while (choice!="2")
+	send(clientSocket, "1", 2, 0);
+	cout << "类型(0.闯关者\t1.出题者\t2.返回):";
+	recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+
+	if (recvbuf[0]=='0')
 	{
-		if (choice=="0")
+		cout << "排名\t" << "姓名\t" << "等级\t" << "最高关卡\t" << "经验" << endl;
+		sprintf(recvbuf, "%d", player::cLevelRanking.size());
+		string curUser;
+		send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
+		recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+		for (int i = 0; i < player::cLevelRanking.size(); i++)
 		{
-			currentPlayer->rank(currentPlayer->getName(),mode);
+			curUser = player::cLevelRanking[i];
+			sprintf(recvbuf, "%s %d %d %d", curUser.c_str(), (*ChallengerInfo)[curUser]->getLevel(), (*ChallengerInfo)[curUser]->getPass(), (*ChallengerInfo)[curUser]->getExp());
+			send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
+			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 		}
-		else if(choice=="1")
-		{
-			string name;
-			string type;
-			cout << "类型(0.闯关者\t1.出题者\t2.返回):";
-			cin >> type;
-			while (type != "0"&&type != "1"&&type != "2")
-			{
-				cout << "类型(0.闯关者\t1.出题者\t2.返回):";
-				cin >> type;
-			}
-			if (type != "2")
-			{
-				cout << "用户名:";
-				cin >> name;
-				if (!currentPlayer->rank(name, Mode(stoi(type)))) cout << "用户不存在！" << endl;
-			}
-		}
-		cout << "请选择：0.我的排名\t1.他人排名\t2.返回" << endl;
-		cin >> choice;
 	}
-	cout << "******************************************************" << endl;
+	else if(recvbuf[0] == '0')
+	{
+		cout << "排名\t" << "姓名\t" << "等级\t" << "出题数" << endl;
+		sprintf(recvbuf, "%d", player::dLevelRanking.size());
+		string curUser;
+		send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
+		for (int i = 0; i < player::dLevelRanking.size(); i++)
+		{
+			curUser = player::dLevelRanking[i];
+			sprintf(recvbuf, "%s %d %d", curUser.c_str(), (*ChallengerInfo)[curUser]->getLevel(), (*ChallengerInfo)[curUser]->getPuzzle());
+			send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
+			recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
+		}
+	}
 }
 
 void game::search()
@@ -574,7 +557,7 @@ void game::searchChallenger(string name, int level, int exp, int pass,int online
 	send(clientSocket, recvbuf, strlen(recvbuf)+1, 0);
 	for (int i = 0; i < temp.size(); i++)
 	{
-		sprintf(recvbuf, "%s %d %d %d", temp[i]->getName().c_str(), temp[i]->getLevel(), temp[i]->getPass(), temp[i]->getExp());
+		sprintf(recvbuf, "%s %d %d %d %d", temp[i]->getName().c_str(), temp[i]->getLevel(), temp[i]->getPass(), temp[i]->getExp(), temp[i]->rank(CHALLENGE));
 		send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 		recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 	}
@@ -633,7 +616,7 @@ void game::searchDesigner(string name, int level, int wordCount, int online)
 	send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	for (int i = 0; i < temp.size(); i++)
 	{
-		sprintf(recvbuf, "%s %d %d", temp[i]->getName().c_str(), temp[i]->getLevel(), temp[i]->getPuzzle());
+		sprintf(recvbuf, "%s %d %d %d", temp[i]->getName().c_str(), temp[i]->getLevel(), temp[i]->getPuzzle(), temp[i]->rank(DESIGN));
 		send(clientSocket, recvbuf, strlen(recvbuf) + 1, 0);
 		recv(clientSocket, recvbuf, MAX_BUFLEN, 0);
 	}
@@ -739,87 +722,7 @@ void game::match(string name)
 		beg->second->isNew = 0;
 	}
 }
-/*
-void game::loadChallenger()
-{
-	ifstream in("challenger.txt");
-	string name, password;
-	int level, pass, exp;
-	while (in>>name)
-	{
-		in >> password >> level >> pass >> exp;
-		ChallengerInfo[name] = new challenger(name, password, level, pass, exp);
-	}
-	in.close();
-}
 
-void game::loadDesigner()
-{
-	ifstream in("designer.txt");
-	string name, password;
-	int level, word;
-	while (in>>name)
-	{
-		in >> password >> level >> word;
-		designerInfo[name] = new designer(name, password, level, word);
-	}
-	in.close();
-}
-
-void game::loadVocabulary()
-{
-	ifstream in("vocabulary.txt");
-	string word;
-	int l = 0;
-	while (in>>word)
-	{
-		if (word.size() > l) l = word.size();
-		vocabulary[l].push_back(word);
-	}
-}
-
-void game::saveChallenger()
-{
-	ofstream out("challenger.txt");
-	auto begin = ChallengerInfo.begin(), end = ChallengerInfo.end();
-
-	while (begin!=end)
-	{
-		out << begin->second->getName() << " " << begin->second->getPw() << " " << begin->second->getLevel()<<" "
-			<< begin->second->getPass() << " " << begin->second->getExp() << endl;
-		begin++;
-	}
-	out.close();
-}
-
-void game::saveDesigner()
-{
-	ofstream out("designer.txt");
-	auto begin = designerInfo.begin(), end = designerInfo.end();
-
-	while (begin != end)
-	{
-		out << begin->second->getName() << " " << begin->second->getPw() << " " << begin->second->getLevel()<<" "
-			<< begin->second->getPuzzle() << endl;
-		begin++;
-	}
-	out.close();
-}
-
-void game::saveVocabulary()
-{
-	ofstream out("vocabulary.txt");
-	auto begin = vocabulary.begin(), end = vocabulary.end();
-	while (begin!=end)
-	{
-		for (auto word:begin->second)
-		{
-			out << word << endl;
-		}
-		begin++;
-	}
-	out.close();
-}*/
 
 void matchJudge(player *c1, player *c2)
 {

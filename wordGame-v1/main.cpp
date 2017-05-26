@@ -101,8 +101,6 @@ void saveVocabulary(std::map<int, std::vector<std::string>> &vocabulary)
 
 int main()
 {
-	/*game g;
-	g.run();*/
 	player::allRankInit();
 	challenger::levelExpInit();
 	designer::levelPuzzleInit();

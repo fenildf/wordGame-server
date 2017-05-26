@@ -5,9 +5,9 @@ using namespace std;
 
 vector<string> player::cLevelRanking = vector<string>();
 vector<string> player::dLevelRanking = vector<string>();
-vector<string> player::expRanking = vector<string>();
-vector<string> player::passRanking = vector<string>();
-vector<string> player::puzzleRanking = vector<string>();
+//vector<string> player::expRanking = vector<string>();
+//vector<string> player::passRanking = vector<string>();
+//vector<string> player::puzzleRanking = vector<string>();
 vector<int> challenger::levelExp = vector<int>();
 vector<int> designer::levelPuzzle = vector<int>();
 player::player(const player & p):name(p.name),password(p.password),level(p.level),clgInfo(p.clgInfo),dsInfo(p.dsInfo)
@@ -76,38 +76,27 @@ bool challenger::solve(string puzzle)
 	return ans==puzzle;
 }
 
-bool challenger::rank(string n, Mode m)
+int challenger::rank( Mode m)
 {
+	int lr = 0;
 	if (m == CHALLENGE)
 	{
-		int lr = 0, pr = 0, er = 0, i = 0;
-		for (; i < cLevelRanking.size() && (lr == 0 || pr == 0 || er == 0); i++)
+		int i = 0;
+		for (; i < cLevelRanking.size() && (lr == 0); i++)
 		{
-			if (cLevelRanking[i] == n) lr = i + 1;
-			if (passRanking[i] == n) pr = i + 1;
-			if (expRanking[i] == n) er = i + 1;
+			if (cLevelRanking[i] == name) lr = i + 1;
 		}
-		//if (lr == 0 || pr == 0 || er == 0) return false;
-		cout << "属性\t" << "等级\t" << "关卡\t" << "经验\t" << endl;
-		cout << "排名\t" << lr << "\t" << pr << "\t" << er << "\t" << endl;
-		//sprintf(recvbuf, "%d %d %d", lr, pr, er);
-		//send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	}
 	else
 	{
-		int lr = 0, wr = 0, i = 0;
-		for (; i < dLevelRanking.size() && (lr == 0 || wr == 0); i++)
+		int i = 0;
+		for (; i < dLevelRanking.size() && (lr == 0); i++)
 		{
-			if (dLevelRanking[i] == n) lr = i + 1;
-			if (puzzleRanking[i] == n) wr = i + 1;
+			if (dLevelRanking[i] == name) lr = i + 1;
+
 		}
-		//if (lr == 0 || wr == 0) return false;
-		cout << "属性\t" << "等级\t" << "出题数\t" << endl;
-		cout << "排名\t" << lr << "\t" << wr << "\t" << endl;
-		//sprintf(recvbuf, "%d %d", lr, wr);
-		//send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	}
-	return true;
+	return lr;
 }
 
 bool challenger::showInfo(char recvbuf[])
@@ -115,7 +104,8 @@ bool challenger::showInfo(char recvbuf[])
 	cout << "姓名\t" << "等级\t" << "闯关数\t" << "经验" << endl;
 	//cout << name << "\t" << level << "\t" << pass << "\t" << exp << "\t" << endl;
 	cout << endl;
-	sprintf(recvbuf, "%s %d %d %d", name.c_str(), level, pass, exp);
+	int r = rank(CHALLENGE);
+	sprintf(recvbuf, "%s %d %d %d %d", name.c_str(), level, pass, exp,r);
 	send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 
 	//rank(name, CHALLENGE);
@@ -125,9 +115,21 @@ bool challenger::showInfo(char recvbuf[])
 
 void challenger::reRank()
 {
-	attrReRank(player::cLevelRanking, level,CHALLENGE,LEVEL);
-	attrReRank(player::passRanking, pass, CHALLENGE,PASS);
-	attrReRank(player::expRanking, exp, CHALLENGE,EXP);
+	
+	int i = 0;
+	while (cLevelRanking.size() > i&&cLevelRanking[i] != name) i++;
+	if (i != cLevelRanking.size())
+	{
+		string next;
+		while (i >= 1)
+		{
+			next = cLevelRanking[i - 1];
+			if (level < (*clgInfo)[next]->getLevel() || (level == (*clgInfo)[next]->getLevel() && pass<(*clgInfo)[next]->getPass())
+				||(level == (*clgInfo)[next]->getLevel() && pass==(*clgInfo)[next]->getPass()&&exp<(*clgInfo)[next]->getExp())) break;
+			swap(cLevelRanking[i - 1], cLevelRanking[i]);
+			i--;
+		}
+	}
 }
 
 void challenger::refreshInfo(int d)
@@ -140,8 +142,8 @@ void challenger::refreshInfo(int d)
 void challenger::addChallenger(string n)
 {
 	player::cLevelRanking.push_back(n);
-	player::passRanking.push_back(n);
-	player::expRanking.push_back(n);
+	//player::passRanking.push_back(n);
+	//player::expRanking.push_back(n);
 }
 
 void challenger::levelExpInit()
@@ -174,18 +176,12 @@ void player::allRankInit()
 {
 	player::rankInit(cLevelRanking, "cLevel.txt");
 	player::rankInit(dLevelRanking, "dLevel.txt");
-	player::rankInit(passRanking, "pass.txt");
-	player::rankInit(expRanking, "exp.txt");
-	player::rankInit(puzzleRanking, "puzzle.txt");
 }
 
 void player::saveAllRank()
 {
 	saveRank(cLevelRanking, "cLevel.txt");
 	saveRank(dLevelRanking, "dLevel.txt");
-	saveRank(passRanking, "pass.txt");
-	saveRank(expRanking, "exp.txt");
-	saveRank(puzzleRanking, "puzzle.txt");
 }
 
 void player::attrReRank(vector<string>& ranking, int attr,Mode m,ATTR a)
@@ -208,38 +204,27 @@ void player::attrReRank(vector<string>& ranking, int attr,Mode m,ATTR a)
 	}
 }
 
-bool designer::rank(string n, Mode m)
+int designer::rank(Mode m)
 {
+	int lr = 0;
 	if (m == CHALLENGE)
 	{
-		int lr = 0, pr = 0, er = 0, i = 0;
-		for (; i < cLevelRanking.size() && (lr == 0 || pr == 0 || er == 0); i++)
+		int i = 0;
+		for (; i < cLevelRanking.size() && (lr == 0); i++)
 		{
-			if (cLevelRanking[i] == n) lr = i + 1;
-			if (passRanking[i] == n) pr = i + 1;
-			if (expRanking[i] == n) er = i + 1;
+			if (cLevelRanking[i] == name) lr = i + 1;
 		}
-		//if (lr == 0 || pr == 0 || er == 0) return false;
-		cout  << "属性\t" << "等级\t" << "关卡\t" << "经验\t" << endl;
-		cout << "排名\t" << lr << "\t" << pr << "\t" << er << "\t" << endl;
-		//sprintf(recvbuf, "%d %d %d", lr, pr, er);
-		//send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	}
 	else
 	{
-		int lr = 0, wr = 0, i = 0;
-		for (; i < dLevelRanking.size() && (lr == 0 || wr == 0); i++)
+		int i = 0;
+		for (; i < dLevelRanking.size() && (lr == 0); i++)
 		{
-			if (dLevelRanking[i] == n) lr = i + 1;
-			if (puzzleRanking[i] == n) wr = i + 1;
+			if (dLevelRanking[i] == name) lr = i + 1;
+			
 		}
-		//if (lr == 0 || wr == 0) return false;
-		cout <<"属性\t" << "等级\t" << "出题数\t" << endl;
-		cout << "排名\t" << lr << "\t" << wr << "\t" << endl;
-		//sprintf(recvbuf, "%d %d", lr, wr);
-		//send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 	}
-	return true;
+	return lr;
 }
 
 void designer::refreshInfo(int d)
@@ -253,7 +238,8 @@ bool designer::showInfo(char recvbuf[])
 	cout << "姓名\t" << "等级\t" << "出题数" << endl;
 	//cout << name << "\t" << level << "\t" << puzzle << endl;
 	cout << endl;
-	sprintf(recvbuf, "%s %d %d", name.c_str(), level, puzzle);
+	int r = rank(DESIGN);
+	sprintf(recvbuf, "%s %d %d %d", name.c_str(), level, puzzle,r);
 	send(currentSocket, recvbuf, strlen(recvbuf) + 1, 0);
 
 	//rank(name, DESIGN);
@@ -263,13 +249,23 @@ bool designer::showInfo(char recvbuf[])
 
 void designer::reRank()
 {
-	attrReRank(dLevelRanking, level,DESIGN,LEVEL);
-	attrReRank(puzzleRanking, puzzle, DESIGN,PUZZLE);
+	int i = 0;
+	while (dLevelRanking.size() > i&&dLevelRanking[i] != name) i++;
+	if (i != dLevelRanking.size())
+	{
+		string next;
+		while (i >= 1)
+		{
+			next = dLevelRanking[i - 1];
+			if (level < (*dsInfo)[next]->getLevel()|| (level == (*dsInfo)[next]->getLevel()&&puzzle<(*dsInfo)[next]->getPuzzle())) break;
+			swap(dLevelRanking[i - 1], dLevelRanking[i]);
+			i--;
+		}
+	}
 }
 
 
 void designer::addDesigner(string n)
 {
 	player::dLevelRanking.push_back(n);
-	player::puzzleRanking.push_back(n);
 }
